@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UT 사용현황 연도별 비교</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#F4F6FB; --surface:#FFF; --surface2:#F0F3FA;
+    --border:#E2E8F4; --border2:#C8D3EA;
+    --text:#1A2340; --text2:#3D5280; --muted:#7A8BAD;
+    --accent:#3B6FE8; --accent-light:#EEF3FD;
+    --accent2:#18A96A; --accent3:#E85C3B;
+    --shadow:0 2px 12px rgba(40,60,120,.08);
+    --shadow-lg:0 6px 28px rgba(40,60,120,.13);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:28px 32px 48px}
+
+  /* HEADER */
+  .header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;gap:16px;flex-wrap:wrap}
+  .header-left{display:flex;align-items:center;gap:14px}
+  .header-icon{width:46px;height:46px;background:linear-gradient(135deg,#3B6FE8,#6C9EFF);border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 14px rgba(59,111,232,.35);flex-shrink:0}
+  .header-left h1{font-size:20px;font-weight:700;letter-spacing:-.4px}
+  .header-left p{font-size:11.5px;color:var(--muted);margin-top:3px;font-family:'DM Mono',monospace}
+  .header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .fy-badge{background:var(--accent-light);border:1px solid #BDD0F8;border-radius:8px;padding:7px 14px;font-size:12px;color:var(--accent);font-family:'DM Mono',monospace;font-weight:500;white-space:nowrap}
+
+  /* UPLOAD */
+  .upload-btn{display:flex;align-items:center;gap:8px;padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:9px;font-size:13px;font-family:'Noto Sans KR',sans-serif;font-weight:600;cursor:pointer;box-shadow:0 3px 10px rgba(59,111,232,.35);transition:all .18s ease;white-space:nowrap}
+  .upload-btn:hover{background:#2C5DD4;transform:translateY(-1px);box-shadow:0 5px 16px rgba(59,111,232,.45)}
+  .upload-btn:active{transform:translateY(0)}
+  #fileInput{display:none}
+  .upload-status{display:none;align-items:center;gap:8px;padding:8px 14px;background:#EAFAF3;border:1px solid #A8E8CC;border-radius:8px;font-size:12px;color:var(--accent2);font-weight:600}
+  .upload-status.error{background:#FDF0EE;border-color:#F5C4B8;color:var(--accent3)}
+  .upload-status.show{display:flex}
+
+  /* CONTROLS */
+  .controls{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:20px;display:flex;gap:24px 40px;flex-wrap:wrap;align-items:flex-end;box-shadow:var(--shadow)}
+  .control-group{display:flex;flex-direction:column;gap:8px}
+  .control-label{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px}
+  .btn-group{display:flex;gap:5px;flex-wrap:wrap}
+  .btn{padding:6px 13px;border-radius:7px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-size:12.5px;font-family:'Noto Sans KR',sans-serif;font-weight:500;cursor:pointer;transition:all .14s ease;white-space:nowrap}
+  .btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
+  .btn.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(59,111,232,.28)}
+
+  /* SUMMARY */
+  .summary-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+  .summary-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;display:flex;flex-direction:column;gap:5px;position:relative;overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .18s}
+  .summary-card:hover{box-shadow:var(--shadow-lg)}
+  .summary-card::after{content:'';position:absolute;top:0;left:0;width:4px;height:100%;border-radius:12px 0 0 12px}
+  .summary-card:nth-child(1)::after{background:var(--accent)}
+  .summary-card:nth-child(2)::after{background:var(--accent2)}
+  .summary-card:nth-child(3)::after{background:#F59E0B}
+  .card-label{font-size:11px;color:var(--muted);font-weight:600}
+  .card-value{font-family:'DM Mono',monospace;font-size:23px;font-weight:500;color:var(--text);line-height:1.1}
+  .card-sub{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+
+  /* CHART */
+  .chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px 28px;margin-bottom:18px;box-shadow:var(--shadow)}
+  .chart-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px}
+  .chart-sub{font-size:11.5px;color:var(--muted);margin-bottom:16px;font-family:'DM Mono',monospace}
+  .chart-container{position:relative;width:100%;height:340px}
+  canvas{display:block}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+  .legend-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);padding:3px 7px;border-radius:5px;cursor:default;transition:background .12s}
+  .legend-item:hover{background:var(--surface2);color:var(--text2)}
+  .legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+
+  /* TABLE */
+  .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px;box-shadow:var(--shadow)}
+  .table-header{padding:16px 24px;border-bottom:1px solid var(--border);font-size:14px;font-weight:700;color:var(--text)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{background:var(--surface2);padding:10px 18px;text-align:right;color:var(--muted);font-weight:600;font-family:'DM Mono',monospace;font-size:11.5px;border-bottom:1.5px solid var(--border);white-space:nowrap}
+  th:first-child{text-align:left}
+  td{padding:9px 18px;text-align:right;font-family:'DM Mono',monospace;font-size:12px;border-bottom:1px solid var(--border);color:var(--text)}
+  td:first-child{text-align:left;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;color:var(--text2)}
+  .month-dot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:8px;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tbody tr:hover td{background:var(--surface2)}
+  .total-row td{background:var(--accent-light)!important;font-weight:700;color:var(--accent)!important;border-top:1.5px solid #BDD0F8}
+  td.empty{color:var(--border2)}
+
+  /* TOOLTIP */
+  #tooltip{position:fixed;background:#fff;border:1px solid #CBD5E8;border-radius:10px;padding:12px 16px;font-size:12px;color:var(--text2);box-shadow:0 4px 20px rgba(30,50,100,.15);pointer-events:none;display:none;z-index:9999;max-width:260px;font-family:'Noto Sans KR',sans-serif}
+  #tooltip .tt-title{font-weight:700;color:var(--text);margin-bottom:8px;font-size:13px}
+  #tooltip .tt-row{display:flex;align-items:center;gap:7px;padding:2px 0}
+  #tooltip .tt-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+  #tooltip .tt-val{margin-left:auto;font-family:'DM Mono',monospace;font-weight:500;color:var(--text)}
+
+  @media(max-width:640px){body{padding:14px}.summary-row{grid-template-columns:1fr}.controls{gap:16px}.header{flex-direction:column}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-icon">📊</div>
+    <div>
+      <h1>UT 사용현황 연도별 비교</h1>
+      <p>FISCAL YEAR ANALYSIS · 회계연도 7월 시작 기준</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="upload-status" id="uploadStatus"></div>
+    <input type="file" id="fileInput" accept=".xlsx,.xls">
+    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      데이터 파일 업데이트
+    </button>
+    <div class="fy-badge">FY = 7월 ~ 익년 6월</div>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="control-group">
+    <div class="control-label">📊 항목 선택</div>
+    <div class="btn-group" id="metricBtns">
+      <button class="btn active" data-metric="전기사용량(kw)">전기 사용량</button>
+      <button class="btn" data-metric="전기요금">전기 요금</button>
+      <button class="btn" data-metric="일반용수사용량(㎥)">일반용수 사용량</button>
+      <button class="btn" data-metric="일반수도요금">일반수도 요금</button>
+      <button class="btn" data-metric="공업용수사용량(㎥)">공업용수 사용량</button>
+      <button class="btn" data-metric="공업용수도요금">공업용수 요금</button>
+      <button class="btn" data-metric="LPG사용량(㎥)">LPG 사용량</button>
+      <button class="btn" data-metric="가스요금">가스 요금</button>
+      <button class="btn" data-metric="폐수처리시설사용료">폐수처리 사용료</button>
+      <button class="btn" data-metric="폐기물발생량(ton)">폐기물 발생량</button>
+      <button class="btn" data-metric="폐기물 금액">폐기물 금액</button>
+    </div>
+  </div>
+  <div class="control-group">
+    <div class="control-label">📅 회계연도</div>
+    <div class="btn-group" id="fyBtns">
+      <button class="btn active" data-fy="all">전체</button>
+      <button class="btn" data-fy="2023">FY2023</button>
+      <button class="btn" data-fy="2024">FY2024</button>
+      <button class="btn" data-fy="2025">FY2025</button>
+    </div>
+  </div>
+  <div class="control-group">
+    <div class="control-label">📈 차트 유형</div>
+    <div class="btn-group" id="chartTypeBtns">
+      <button class="btn active" data-type="bar">막대</button>
+      <button class="btn" data-type="line">선형</button>
+    </div>
+  </div>
+</div>
+
+<div class="summary-row" id="summaryCards"></div>
+
+<div class="chart-wrap">
+  <div class="chart-title" id="chartTitle"></div>
+  <div class="chart-sub" id="chartSub"></div>
+  <div class="chart-container"><canvas id="mainChart"></canvas></div>
+  <div class="legend" id="legend"></div>
+</div>
+
+<div class="table-wrap">
+  <div class="table-header" id="tableTitle">상세 데이터</div>
+  <div style="overflow-x:auto"><table id="dataTable"></table></div>
+</div>
+
+<div id="tooltip"></div>
+
+<script>
+// ============================================================
+// EMBEDDED XLSX PARSER (no external dependency)
+// ============================================================
+const XLSXLite = (function(){
+  function u8a(buf){return new Uint8Array(buf)}
+  function readU16LE(b,o){return b[o]|(b[o+1]<<8)}
+  function readU32LE(b,o){return(b[o]|(b[o+1]<<8)|(b[o+2]<<16)|(b[o+3]<<24))>>>0}
+
+  // ── inflate (DEFLATE) ────────────────────────────────────────
+  // Tiny inflate using DecompressionStream when available, else pure-JS
+  async function inflate(data){
+    if(typeof DecompressionStream!=='undefined'){
+      try{
+        const ds=new DecompressionStream('raw');
+        const writer=ds.writable.getWriter();
+        writer.write(data);writer.close();
+        const chunks=[];
+        const reader=ds.readable.getReader();
+        while(true){const{done,value}=await reader.read();if(done)break;chunks.push(value);}
+        const total=chunks.reduce((s,c)=>s+c.length,0);
+        const out=new Uint8Array(total);let off=0;
+        for(const c of chunks){out.set(c,off);off+=c.length;}
+        return out;
+      }catch(e){/* fallback */}
+    }
+    // Pure JS DEFLATE (enough for xlsx)
+    return inflatePure(data);
+  }
+
+  function inflatePure(input){
+    // RFC 1951 DEFLATE
+    let pos=0,outBuf=[],bit=0,bitLen=0;
+    function readBit(){
+      if(bitLen===0){bit=input[pos++];bitLen=8;}
+      const b=bit&1;bit>>=1;bitLen--;return b;
+    }
+    function readBits(n){let v=0;for(let i=0;i<n;i++)v|=readBit()<<i;return v;}
+    function buildTree(lens){
+      const maxLen=Math.max(...lens);
+      const count=new Array(maxLen+1).fill(0);
+      for(const l of lens)if(l)count[l]++;
+      const next=new Array(maxLen+2).fill(0);
+      let code=0;
+      for(let l=1;l<=maxLen;l++){code=(code+count[l-1])<<1;next[l]=code;}
+      const table={};
+      for(let i=0;i<lens.length;i++){
+        const l=lens[i];if(!l)continue;
+        table[next[l]+'_'+l]=i;next[l]++;
+      }
+      return{table,maxLen};
+    }
+    function readCode(tree){
+      let code=0,len=0;
+      while(len<=tree.maxLen){
+        code=(code<<1)|readBit();len++;
+        const k=code+'_'+len;
+        if(tree.table[k]!==undefined)return tree.table[k];
+      }
+      throw new Error('bad code');
+    }
+    const CLEN_ORDER=[16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15];
+    const DIST_BASE=[1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577];
+    const DIST_EXTRA=[0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13];
+    const LEN_BASE=[3,4,5,6,7,8,9,10,11,13,15,17,19,23,27,31,35,43,51,59,67,83,99,115,131,163,195,227,258];
+    const LEN_EXTRA=[0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0];
+    let bfinal=0;
+    while(!bfinal){
+      bfinal=readBit();
+      const btype=readBits(2);
+      if(btype===0){
+        bitLen=0;const len=readU16LE(input,pos);pos+=4;
+        for(let i=0;i<len;i++)outBuf.push(input[pos++]);
+      } else {
+        let litTree,distTree;
+        if(btype===1){
+          const litLens=[...Array(144).fill(8),...Array(112).fill(9),...Array(24).fill(7),...Array(8).fill(8)];
+          const distLens=Array(32).fill(5);
+          litTree=buildTree(litLens);distTree=buildTree(distLens);
+        } else {
+          const hlit=readBits(5)+257,hdist=readBits(5)+1,hclen=readBits(4)+4;
+          const clenLens=Array(19).fill(0);
+          for(let i=0;i<hclen;i++)clenLens[CLEN_ORDER[i]]=readBits(3);
+          const clenTree=buildTree(clenLens);
+          const allLens=[];
+          while(allLens.length<hlit+hdist){
+            const c=readCode(clenTree);
+            if(c<16){allLens.push(c);}
+            else if(c===16){const r=readBits(2)+3;for(let i=0;i<r;i++)allLens.push(allLens[allLens.length-1]);}
+            else if(c===17){const r=readBits(3)+3;for(let i=0;i<r;i++)allLens.push(0);}
+            else{const r=readBits(7)+11;for(let i=0;i<r;i++)allLens.push(0);}
+          }
+          litTree=buildTree(allLens.slice(0,hlit));
+          distTree=buildTree(allLens.slice(hlit));
+        }
+        while(true){
+          const sym=readCode(litTree);
+          if(sym===256)break;
+          if(sym<256){outBuf.push(sym);}
+          else {
+            const li=sym-257;
+            const len=LEN_BASE[li]+readBits(LEN_EXTRA[li]);
+            const di=readCode(distTree);
+            const dist=DIST_BASE[di]+readBits(DIST_EXTRA[di]);
+            const base=outBuf.length-dist;
+            for(let i=0;i<len;i++)outBuf.push(outBuf[base+i]);
+          }
+        }
+      }
+    }
+    return new Uint8Array(outBuf);
+  }
+
+  // ── ZIP reader ───────────────────────────────────────────────
+  async function readZip(buf){
+    const b=u8a(buf);
+    const entries={};
+    // Find End of Central Directory
+    let eocd=-1;
+    for(let i=b.length-22;i>=0;i--){
+      if(b[i]===0x50&&b[i+1]===0x4b&&b[i+2]===0x05&&b[i+3]===0x06){eocd=i;break;}
+    }
+    if(eocd<0)throw new Error('Not a ZIP');
+    const cdOffset=readU32LE(b,eocd+16);
+    const cdSize=readU32LE(b,eocd+12);
+    let p=cdOffset;
+    while(p<cdOffset+cdSize){
+      if(readU32LE(b,p)!==0x02014b50)break;
+      const method=readU16LE(b,p+10);
+      const compSize=readU32LE(b,p+20);
+      const uncompSize=readU32LE(b,p+24);
+      const fnLen=readU16LE(b,p+28);
+      const extraLen=readU16LE(b,p+30);
+      const commentLen=readU16LE(b,p+32);
+      const localOffset=readU32LE(b,p+42);
+      const fname=new TextDecoder().decode(b.slice(p+46,p+46+fnLen));
+      entries[fname]={method,compSize,uncompSize,localOffset};
+      p+=46+fnLen+extraLen+commentLen;
+    }
+    async function getEntry(name){
+      const e=entries[name];if(!e)return null;
+      const lp=e.localOffset;
+      const fnLen2=readU16LE(b,lp+26);
+      const extraLen2=readU16LE(b,lp+28);
+      const dataStart=lp+30+fnLen2+extraLen2;
+      const comp=b.slice(dataStart,dataStart+e.compSize);
+      if(e.method===0)return comp;
+      if(e.method===8)return inflate(comp);
+      throw new Error('Unsupported compression: '+e.method);
+    }
+    return{entries,getEntry};
+  }
+
+  // ── XML tiny parser ──────────────────────────────────────────
+  function parseXML(str){
+    // Returns flat list of {tag, attrs, text, close}
+    const nodes=[];
+    const re=/<([^>]+)>([^<]*)/g;let m;
+    while((m=re.exec(str))!==null){
+      const raw=m[1].trim();
+      const text=m[2];
+      if(raw.startsWith('?')||raw.startsWith('!')){continue;}
+      const close=raw.startsWith('/');
+      const selfClose=raw.endsWith('/');
+      const tagPart=close?raw.slice(1):selfClose?raw.slice(0,-1):raw;
+      const parts=tagPart.trim().split(/\s+/);
+      const tag=parts[0].replace(/.*:/,'');
+      const attrs={};
+      for(let i=1;i<parts.length;i++){
+        const eq=parts[i].indexOf('=');
+        if(eq>0){
+          const k=parts[i].slice(0,eq).replace(/.*:/,'');
+          const v=parts[i].slice(eq+1).replace(/"/g,'').replace(/'/g,'');
+          attrs[k]=v;
+        }
+      }
+      nodes.push({tag,attrs,text:text.trim(),close,selfClose});
+    }
+    return nodes;
+  }
+
+  // ── Number format detector ──────────────────────────────────
+  function excelDate(serial){
+    const d=new Date((serial-25569)*86400000);
+    return d;
+  }
+
+  // ── Main parse function ──────────────────────────────────────
+  async function parse(arrayBuffer){
+    const zip=await readZip(arrayBuffer);
+
+    // 1. Shared strings
+    const ssRaw=await zip.getEntry('xl/sharedStrings.xml');
+    const sharedStrings=[];
+    if(ssRaw){
+      const ssXML=new TextDecoder('utf-8').decode(ssRaw);
+      const nodes=parseXML(ssXML);
+      let cur='';
+      for(const n of nodes){
+        if(n.tag==='si'&&!n.close){cur='';}
+        if(n.tag==='t'&&!n.close&&!n.selfClose){cur+=n.text;}
+        if(n.tag==='si'&&n.close){sharedStrings.push(cur);cur='';}
+      }
+    }
+
+    // 2. Find sheet (first or 사용 sheet)
+    const wbRaw=await zip.getEntry('xl/workbook.xml');
+    let sheetFile='xl/worksheets/sheet1.xml';
+    if(wbRaw){
+      const wbXML=new TextDecoder('utf-8').decode(wbRaw);
+      const nodes=parseXML(wbXML);
+      let idx=1;
+      for(const n of nodes){
+        if(n.tag==='sheet'&&n.attrs.name){
+          if(n.attrs.name.includes('사용')){
+            sheetFile=`xl/worksheets/sheet${idx}.xml`;break;
+          }
+          idx++;
+        }
+      }
+    }
+
+    // 3. Parse sheet
+    const wsRaw=await zip.getEntry(sheetFile);
+    if(!wsRaw)throw new Error('시트를 찾을 수 없습니다.');
+    const wsXML=new TextDecoder('utf-8').decode(wsRaw);
+    const nodes=parseXML(wsXML);
+
+    // Build row→col→value map
+    const grid={};
+    let curRow=null,curCol=null,curType=null,curStyle=null,inV=false;
+    for(const n of nodes){
+      if(n.tag==='row'&&!n.close){curRow=parseInt(n.attrs.r);}
+      if(n.tag==='c'&&!n.close){
+        curCol=n.attrs.r;curType=n.attrs.t||'';curStyle=n.attrs.s||'';inV=false;
+      }
+      if(n.tag==='v'&&!n.close){inV=true;}
+      if(n.tag==='v'&&n.text&&curCol){
+        let val=n.text;
+        if(curType==='s'){val=sharedStrings[parseInt(val)]||'';}
+        else if(curType==='b'){val=val==='1';}
+        else{
+          const num=parseFloat(val);
+          val=isNaN(num)?val:num;
+        }
+        if(!grid[curRow])grid[curRow]={};
+        grid[curRow][curCol]=val;
+        curCol=null;
+      }
+    }
+
+    // Convert col letters to index
+    function colIdx(ref){
+      const m=ref.match(/([A-Z]+)/);if(!m)return 0;
+      let n=0;for(const c of m[1])n=n*26+(c.charCodeAt(0)-64);return n-1;
+    }
+
+    // Build 2D array
+    const rows=Object.keys(grid).map(Number).sort((a,b)=>a-b);
+    if(!rows.length)throw new Error('데이터 없음');
+    const result=[];
+    for(const r of rows){
+      const row=grid[r];
+      const cols=Object.keys(row);
+      const maxCol=Math.max(...cols.map(c=>colIdx(c)));
+      const arr=new Array(maxCol+1).fill(null);
+      for(const c of cols)arr[colIdx(c)]=row[c];
+      result.push(arr);
+    }
+    return result;
+  }
+
+  return{parse};
+})();
+
+// ============================================================
+// APP DATA & CONFIG
+// ============================================================
+const DEFAULT_DATA=[
+  {date:"2023-07-01",fy:2023,month:7,fyMonth:1,"전기사용량(kw)":19242,"전기요금":4164360,"일반용수사용량(㎥)":17,"일반수도요금":32600,"공업용수사용량(㎥)":38,"공업용수도요금":50060,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":56700,"폐기물발생량(ton)":null,"폐기물 금액":null},
+  {date:"2023-08-01",fy:2023,month:8,fyMonth:2,"전기사용량(kw)":16687,"전기요금":3817400,"일반용수사용량(㎥)":18,"일반수도요금":34030,"공업용수사용량(㎥)":86,"공업용수도요금":102780,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":63000,"폐기물발생량(ton)":null,"폐기물 금액":null},
+  {date:"2023-09-01",fy:2023,month:9,fyMonth:3,"전기사용량(kw)":17191,"전기요금":3715710,"일반용수사용량(㎥)":20,"일반수도요금":36880,"공업용수사용량(㎥)":62,"공업용수도요금":76420,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":69300,"폐기물발생량(ton)":16.5,"폐기물 금액":3960000},
+  {date:"2023-10-01",fy:2023,month:10,fyMonth:4,"전기사용량(kw)":28363,"전기요금":4853510,"일반용수사용량(㎥)":22,"일반수도요금":41560,"공업용수사용량(㎥)":1,"공업용수도요금":12510,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":78750,"폐기물발생량(ton)":null,"폐기물 금액":0},
+  {date:"2023-11-01",fy:2023,month:11,fyMonth:5,"전기사용량(kw)":61444,"전기요금":9311770,"일반용수사용량(㎥)":25,"일반수도요금":46050,"공업용수사용량(㎥)":73,"공업용수도요금":88490,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":138600,"폐기물발생량(ton)":13.04,"폐기물 금액":3129600},
+  {date:"2023-12-01",fy:2023,month:12,fyMonth:6,"전기사용량(kw)":67714,"전기요금":10531240,"일반용수사용량(㎥)":44,"일반수도요금":80880,"공업용수사용량(㎥)":22,"공업용수도요금":32490,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":809550,"폐기물발생량(ton)":23.79,"폐기물 금액":5709600},
+  {date:"2024-01-01",fy:2023,month:1,fyMonth:7,"전기사용량(kw)":74175,"전기요금":11374710,"일반용수사용량(㎥)":257,"일반수도요금":704180,"공업용수사용량(㎥)":2,"공업용수도요금":10520,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":132300,"폐기물발생량(ton)":16.01,"폐기물 금액":3842400},
+  {date:"2024-02-01",fy:2023,month:2,fyMonth:8,"전기사용량(kw)":43519,"전기요금":7394640,"일반용수사용량(㎥)":42,"일반수도요금":77210,"공업용수사용량(㎥)":1,"공업용수도요금":9410,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":66150,"폐기물발생량(ton)":12.97,"폐기물 금액":3112800},
+  {date:"2024-03-01",fy:2023,month:3,fyMonth:9,"전기사용량(kw)":18636,"전기요금":3849250,"일반용수사용량(㎥)":21,"일반수도요금":38710,"공업용수사용량(㎥)":287,"공업용수도요금":322330,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":44100,"폐기물발생량(ton)":null,"폐기물 금액":null},
+  {date:"2024-04-01",fy:2023,month:4,fyMonth:10,"전기사용량(kw)":13229,"전기요금":2992110,"일반용수사용량(㎥)":14,"일반수도요금":28320,"공업용수사용량(㎥)":0,"공업용수도요금":8330,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":47250,"폐기물발생량(ton)":12.19,"폐기물 금액":2925600},
+  {date:"2024-05-01",fy:2023,month:5,fyMonth:11,"전기사용량(kw)":16690,"전기요금":3411240,"일반용수사용량(㎥)":15,"일반수도요금":29740,"공업용수사용량(㎥)":21,"공업용수도요금":31300,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":50400,"폐기물발생량(ton)":null,"폐기물 금액":null},
+  {date:"2024-06-01",fy:2023,month:6,fyMonth:12,"전기사용량(kw)":18144,"전기요금":3749930,"일반용수사용량(㎥)":16,"일반수도요금":31170,"공업용수사용량(㎥)":45,"공업용수도요금":57560,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":47250,"폐기물발생량(ton)":null,"폐기물 금액":null},
+  {date:"2024-07-01",fy:2024,month:7,fyMonth:1,"전기사용량(kw)":23189,"전기요금":4536600,"일반용수사용량(㎥)":15,"일반수도요금":29740,"공업용수사용량(㎥)":30,"공업용수도요금":41150,"LPG사용량(㎥)":1033,"가스요금":1192035,"폐수처리시설사용료":75600,"폐기물발생량(ton)":null,"폐기물 금액":null},
+  {date:"2024-08-01",fy:2024,month:8,fyMonth:2,"전기사용량(kw)":21449,"전기요금":4345570,"일반용수사용량(㎥)":24,"일반수도요금":44210,"공업용수사용량(㎥)":139,"공업용수도요금":160400,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":50400,"폐기물발생량(ton)":null,"폐기물 금액":null},
+  {date:"2024-09-01",fy:2024,month:9,fyMonth:3,"전기사용량(kw)":24944,"전기요금":4543360,"일반용수사용량(㎥)":16,"일반수도요금":31170,"공업용수사용량(㎥)":156,"공업용수도요금":179010,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":59850,"폐기물발생량(ton)":6,"폐기물 금액":1377600},
+  {date:"2024-10-01",fy:2024,month:10,fyMonth:4,"전기사용량(kw)":30089,"전기요금":4939960,"일반용수사용량(㎥)":19,"일반수도요금":35450,"공업용수사용량(㎥)":54,"공업용수도요금":67420,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":72450,"폐기물발생량(ton)":15,"폐기물 금액":3619200},
+  {date:"2024-11-01",fy:2024,month:11,fyMonth:5,"전기사용량(kw)":61208,"전기요금":9648280,"일반용수사용량(㎥)":23,"일반수도요금":42380,"공업용수사용량(㎥)":1,"공업용수도요금":9410,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":91350,"폐기물발생량(ton)":25,"폐기물 금액":6016800},
+  {date:"2024-12-01",fy:2024,month:12,fyMonth:6,"전기사용량(kw)":69104,"전기요금":11272910,"일반용수사용량(㎥)":29,"일반수도요금":53380,"공업용수사용량(㎥)":0,"공업용수도요금":8330,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":72450,"폐기물발생량(ton)":21,"폐기물 금액":4927200},
+  {date:"2025-01-01",fy:2024,month:1,fyMonth:7,"전기사용량(kw)":36970,"전기요금":6820510,"일반용수사용량(㎥)":23,"일반수도요금":42380,"공업용수사용량(㎥)":36,"공업용수도요금":47720,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":900900,"폐기물발생량(ton)":19,"폐기물 금액":4456800},
+  {date:"2025-02-01",fy:2024,month:2,fyMonth:8,"전기사용량(kw)":51154,"전기요금":8897850,"일반용수사용량(㎥)":286,"일반수도요금":795530,"공업용수사용량(㎥)":0,"공업용수도요금":8330,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":781200,"폐기물발생량(ton)":14,"폐기물 금액":3264000},
+  {date:"2025-03-01",fy:2024,month:3,fyMonth:9,"전기사용량(kw)":17683,"전기요금":3932820,"일반용수사용량(㎥)":248,"일반수도요금":675830,"공업용수사용량(㎥)":0,"공업용수도요금":8330,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":47250,"폐기물발생량(ton)":15,"폐기물 금액":3518400},
+  {date:"2025-04-01",fy:2024,month:4,fyMonth:10,"전기사용량(kw)":11402,"전기요금":2926230,"일반용수사용량(㎥)":15,"일반수도요금":29740,"공업용수사용량(㎥)":5,"공업용수도요금":13790,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":33660,"폐기물발생량(ton)":null,"폐기물 금액":null},
+  {date:"2025-05-01",fy:2024,month:5,fyMonth:11,"전기사용량(kw)":11762,"전기요금":2965640,"일반용수사용량(㎥)":10,"일반수도요금":22610,"공업용수사용량(㎥)":6,"공업용수도요금":14880,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":34650,"폐기물발생량(ton)":6,"폐기물 금액":1341600},
+  {date:"2025-06-01",fy:2024,month:6,fyMonth:12,"전기사용량(kw)":14008,"전기요금":3426910,"일반용수사용량(㎥)":11,"일반수도요금":24040,"공업용수사용량(㎥)":2,"공업용수도요금":10510,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":27200,"폐기물발생량(ton)":null,"폐기물 금액":null},
+  {date:"2025-07-01",fy:2025,month:7,fyMonth:1,"전기사용량(kw)":12288,"전기요금":3290220,"일반용수사용량(㎥)":8,"일반수도요금":19750,"공업용수사용량(㎥)":20,"공업용수도요금":30180,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":44100,"폐기물발생량(ton)":6,"폐기물 금액":1360800},
+  {date:"2025-08-01",fy:2025,month:8,fyMonth:2,"전기사용량(kw)":12006,"전기요금":3207620,"일반용수사용량(㎥)":14,"일반수도요금":28320,"공업용수사용량(㎥)":25,"공업용수도요금":35640,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":50400,"폐기물발생량(ton)":null,"폐기물 금액":null},
+  {date:"2025-09-01",fy:2025,month:9,fyMonth:3,"전기사용량(kw)":15547,"전기요금":3630790,"일반용수사용량(㎥)":16,"일반수도요금":31170,"공업용수사용량(㎥)":20,"공업용수도요금":30180,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":59850,"폐기물발생량(ton)":5,"폐기물 금액":1104000},
+  {date:"2025-10-01",fy:2025,month:10,fyMonth:4,"전기사용량(kw)":22567,"전기요금":4926130,"일반용수사용량(㎥)":19,"일반수도요금":35450,"공업용수사용량(㎥)":1,"공업용수도요금":9410,"LPG사용량(㎥)":null,"가스요금":null,"폐수처리시설사용료":69300,"폐기물발생량(ton)":17,"폐기물 금액":4003200},
+  {date:"2025-11-01",fy:2025,month:11,fyMonth:5,"전기사용량(kw)":68117,"전기요금":13757940,"일반용수사용량(㎥)":22,"일반수도요금":40550,"공업용수사용량(㎥)":0,"공업용수도요금":8330,"LPG사용량(㎥)":null,"가스요금":50350,"폐수처리시설사용료":129780,"폐기물발생량(ton)":13,"폐기물 금액":3096000},
+  {date:"2025-12-01",fy:2025,month:12,fyMonth:6,"전기사용량(kw)":48471,"전기요금":11502990,"일반용수사용량(㎥)":40,"일반수도요금":73540,"공업용수사용량(㎥)":0,"공업용수도요금":8330,"LPG사용량(㎥)":null,"가스요금":50350,"폐수처리시설사용료":126000,"폐기물발생량(ton)":6,"폐기물 금액":1483200},
+  {date:"2026-01-01",fy:2025,month:1,fyMonth:7,"전기사용량(kw)":45153,"전기요금":11023840,"일반용수사용량(㎥)":40,"일반수도요금":73540,"공업용수사용량(㎥)":0,"공업용수도요금":8330,"LPG사용량(㎥)":6026,"가스요금":4833428,"폐수처리시설사용료":94500,"폐기물발생량(ton)":7,"폐기물 금액":1560000},
+  {date:"2026-02-01",fy:2025,month:2,fyMonth:8,"전기사용량(kw)":23127,"전기요금":6795030,"일반용수사용량(㎥)":36,"일반수도요금":47760,"공업용수사용량(㎥)":30,"공업용수도요금":55210,"LPG사용량(㎥)":0,"가스요금":50320,"폐수처리시설사용료":44100,"폐기물발생량(ton)":null,"폐기물 금액":null},
+  {date:"2026-03-01",fy:2025,month:3,fyMonth:9,"전기사용량(kw)":34445,"전기요금":8010860,"일반용수사용량(㎥)":14,"일반수도요금":28320,"공업용수사용량(㎥)":37,"공업용수도요금":48850,"LPG사용량(㎥)":17676,"가스요금":9334503,"폐수처리시설사용료":null,"폐기물발생량(ton)":5,"폐기물 금액":1166400},
+];
+
+const MONTH_COLORS=['#3B82F6','#F59E0B','#10B981','#EF4444','#8B5CF6','#EC4899','#06B6D4','#84CC16','#F97316','#6366F1','#14B8A6','#F43F5E'];
+const FY_MONTH_LABELS=['7월','8월','9월','10월','11월','12월','1월','2월','3월','4월','5월','6월'];
+const METRIC_INFO={
+  '전기사용량(kw)':{label:'전기 사용량',unit:'kW',fmt:'num'},
+  '전기요금':{label:'전기 요금',unit:'원',fmt:'currency'},
+  '일반용수사용량(㎥)':{label:'일반용수 사용량',unit:'㎥',fmt:'num'},
+  '일반수도요금':{label:'일반수도 요금',unit:'원',fmt:'currency'},
+  '공업용수사용량(㎥)':{label:'공업용수 사용량',unit:'㎥',fmt:'num'},
+  '공업용수도요금':{label:'공업용수 요금',unit:'원',fmt:'currency'},
+  'LPG사용량(㎥)':{label:'LPG 사용량',unit:'㎥',fmt:'num'},
+  '가스요금':{label:'가스 요금',unit:'원',fmt:'currency'},
+  '폐수처리시설사용료':{label:'폐수처리 사용료',unit:'원',fmt:'currency'},
+  '폐기물발생량(ton)':{label:'폐기물 발생량',unit:'ton',fmt:'num'},
+  '폐기물 금액':{label:'폐기물 금액',unit:'원',fmt:'currency'},
+};
+
+let raw=DEFAULT_DATA.map(d=>({...d}));
+let currentMetric='전기사용량(kw)';
+let currentFY='all';
+let currentChartType='bar';
+// tooltip hit areas
+let hitAreas=[];
+
+// ============================================================
+// HELPERS
+// ============================================================
+function toNum(v){
+  if(v===null||v===undefined)return null;
+  if(typeof v==='number'&&!isNaN(v))return v;
+  if(typeof v==='string'){const n=parseFloat(v.replace(/,/g,'').replace(/[^\d.-]/g,''));return isNaN(n)?null:n;}
+  return null;
+}
+function getFY(y,m){return m>=7?y:y-1;}
+function getFYMonth(m){return m>=7?m-6:m+6;}
+function fmt(v,type){
+  if(v===null||v===undefined||isNaN(v))return '-';
+  if(type==='currency')return v.toLocaleString('ko-KR')+'원';
+  return v.toLocaleString('ko-KR');
+}
+function fmtShort(v,type){
+  if(v===null||v===undefined||isNaN(v))return '-';
+  if(type==='currency'){
+    if(v>=1e8)return(v/1e8).toFixed(1)+'억';
+    if(v>=1e4)return Math.round(v/1e4).toLocaleString('ko-KR')+'만';
+    return v.toLocaleString('ko-KR');
+  }
+  return v.toLocaleString('ko-KR');
+}
+function showStatus(msg,err=false){
+  const el=document.getElementById('uploadStatus');
+  el.textContent=msg;el.className='upload-status show'+(err?' error':'');
+  if(!err)setTimeout(()=>el.classList.remove('show'),6000);
+}
+function getActiveFYs(){
+  const all=[...new Set(raw.map(d=>d.fy))].sort();
+  return currentFY==='all'?all:[parseInt(currentFY)];
+}
+
+// ============================================================
+// CANVAS CHART ENGINE
+// ============================================================
+function hexToRgba(hex,a){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+function drawChart(){
+  const canvas=document.getElementById('mainChart');
+  const container=canvas.parentElement;
+  const W=container.clientWidth;
+  const H=340;
+  canvas.width=W*devicePixelRatio;
+  canvas.height=H*devicePixelRatio;
+  canvas.style.width=W+'px';
+  canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');
+  ctx.scale(devicePixelRatio,devicePixelRatio);
+
+  const info=METRIC_INFO[currentMetric];
+  const fys=getActiveFYs();
+  hitAreas=[];
+
+  // Build series
+  let labels,series;
+  if(currentFY!=='all'){
+    labels=FY_MONTH_LABELS;
+    series=FY_MONTH_LABELS.map((_,i)=>{
+      const fyMonth=i+1;
+      const row=raw.find(d=>d.fy===fys[0]&&d.fyMonth===fyMonth);
+      return{color:MONTH_COLORS[i],label:FY_MONTH_LABELS[i],value:row?toNum(row[currentMetric]):null};
+    });
+  } else {
+    labels=fys.map(f=>`FY${f}`);
+    series=FY_MONTH_LABELS.map((ml,i)=>({
+      color:MONTH_COLORS[i],label:ml,
+      values:fys.map(fy=>{const r=raw.find(d=>d.fy===fy&&d.fyMonth===i+1);return r?toNum(r[currentMetric]):null;})
+    }));
+  }
+
+  // Layout
+  const pad={top:20,right:20,bottom:50,left:80};
+  const cW=W-pad.left-pad.right;
+  const cH=H-pad.top-pad.bottom;
+
+  // Compute max value
+  let maxVal=0;
+  if(currentFY!=='all'){
+    series.forEach(s=>{if(s.value!=null&&s.value>maxVal)maxVal=s.value;});
+  } else {
+    series.forEach(s=>{s.values.forEach(v=>{if(v!=null&&v>maxVal)maxVal=v;});});
+  }
+  if(maxVal===0)maxVal=1;
+  // Nice max
+  const mag=Math.pow(10,Math.floor(Math.log10(maxVal)));
+  maxVal=Math.ceil(maxVal/mag)*mag;
+
+  const toY=v=>pad.top+cH-(v/maxVal)*cH;
+  const toX_pct=pct=>pad.left+pct*cW;
+
+  // Grid lines
+  ctx.strokeStyle='#EBF0F9';ctx.lineWidth=1;
+  const gridN=5;
+  for(let i=0;i<=gridN;i++){
+    const v=maxVal*i/gridN;
+    const y=toY(v);
+    ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(pad.left+cW,y);ctx.stroke();
+    ctx.fillStyle='#7A8BAD';ctx.font=`11px 'DM Mono',monospace`;ctx.textAlign='right';
+    ctx.fillText(fmtShort(v,info.fmt),pad.left-8,y+4);
+  }
+
+  if(currentFY!=='all'){
+    // Grouped bar: each label = one FY, groups of 12 months
+    const nGroups=labels.length;
+    const nBars=FY_MONTH_LABELS.length;
+    const groupW=cW/nGroups;
+    const barW=Math.min((groupW*0.85)/nBars, 18);
+    const gap=(groupW*0.85-barW*nBars)/(nBars+1);
+
+    labels.forEach((lbl,gi)=>{
+      const gx=pad.left+gi*groupW;
+      const centerX=gx+groupW/2;
+      // x-axis label
+      ctx.fillStyle='#7A8BAD';ctx.font=`12px 'Noto Sans KR',sans-serif`;ctx.textAlign='center';
+      ctx.fillText(lbl,centerX,H-pad.bottom+20);
+
+      series.forEach((s,bi)=>{
+        const v=s.value; // single FY mode: one value per month
+        // In single FY mode labels = FY_MONTH_LABELS, series has .value
+        // re-check index
+      });
+    });
+
+    // For single FY: labels = 12 months, series[i].value
+    const nG2=FY_MONTH_LABELS.length;
+    const gW2=cW/nG2;
+    const bW2=Math.min(gW2*0.6, 32);
+
+    if(currentChartType==='bar'){
+      series.forEach((s,i)=>{
+        const x=pad.left+i*gW2+gW2/2-bW2/2;
+        const v=s.value;
+        ctx.fillStyle='#7A8BAD';ctx.font=`12px 'Noto Sans KR',sans-serif`;ctx.textAlign='center';
+        ctx.fillText(FY_MONTH_LABELS[i],pad.left+i*gW2+gW2/2,H-pad.bottom+20);
+        if(v==null)return;
+        const y=toY(v),h=toY(0)-toY(v);
+        ctx.fillStyle=hexToRgba(s.color,0.78);
+        const r=4;
+        ctx.beginPath();
+        ctx.moveTo(x+r,y);ctx.lineTo(x+bW2-r,y);
+        ctx.quadraticCurveTo(x+bW2,y,x+bW2,y+r);
+        ctx.lineTo(x+bW2,toY(0));ctx.lineTo(x,toY(0));
+        ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);
+        ctx.closePath();ctx.fill();
+        hitAreas.push({x,y,w:bW2,h:toY(0)-y,label:FY_MONTH_LABELS[i],value:v,color:s.color,fmt:info.fmt});
+      });
+    } else {
+      // Line chart single FY
+      ctx.beginPath();let started=false;
+      series.forEach((s,i)=>{
+        const cx=pad.left+i*gW2+gW2/2;
+        const v=s.value;
+        ctx.fillStyle='#7A8BAD';ctx.font=`12px 'Noto Sans KR',sans-serif`;ctx.textAlign='center';
+        ctx.fillText(FY_MONTH_LABELS[i],cx,H-pad.bottom+20);
+        if(v==null)return;
+        const cy=toY(v);
+        if(!started){ctx.moveTo(cx,cy);started=true;}else ctx.lineTo(cx,cy);
+      });
+      ctx.strokeStyle='#3B6FE8';ctx.lineWidth=2.5;ctx.stroke();
+      series.forEach((s,i)=>{
+        const cx=pad.left+i*gW2+gW2/2;
+        if(s.value==null)return;
+        const cy=toY(s.value);
+        ctx.beginPath();ctx.arc(cx,cy,5,0,Math.PI*2);
+        ctx.fillStyle=s.color;ctx.fill();
+        ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+        hitAreas.push({x:cx-8,y:cy-8,w:16,h:16,label:FY_MONTH_LABELS[i],value:s.value,color:s.color,fmt:info.fmt});
+      });
+    }
+
+  } else {
+    // All FYs: grouped bar/line
+    const nGroups=fys.length;
+    const nBars=12;
+    const groupW=cW/nGroups;
+    const barW=Math.min((groupW*0.88)/nBars,14);
+
+    fys.forEach((fy,gi)=>{
+      const gx=pad.left+gi*groupW;
+      ctx.fillStyle='#7A8BAD';ctx.font=`12px 'Noto Sans KR',sans-serif`;ctx.textAlign='center';
+      ctx.fillText(`FY${fy}`,gx+groupW/2,H-pad.bottom+20);
+
+      if(currentChartType==='bar'){
+        series.forEach((s,bi)=>{
+          const v=s.values[gi];if(v==null)return;
+          const totalBarW=barW*nBars;
+          const startX=gx+(groupW-totalBarW)/2;
+          const x=startX+bi*barW;
+          const y=toY(v),h=toY(0)-y;
+          ctx.fillStyle=hexToRgba(s.color,0.82);
+          ctx.beginPath();
+          const r=Math.min(3,barW/2-1);
+          ctx.moveTo(x+r,y);ctx.lineTo(x+barW-r,y);
+          ctx.quadraticCurveTo(x+barW,y,x+barW,y+r);
+          ctx.lineTo(x+barW,toY(0));ctx.lineTo(x,toY(0));
+          ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);
+          ctx.closePath();ctx.fill();
+          hitAreas.push({x,y,w:barW,h,label:`FY${fy} ${s.label}`,value:v,color:s.color,fmt:info.fmt});
+        });
+      }
+    });
+
+    if(currentChartType==='line'){
+      series.forEach((s,bi)=>{
+        ctx.beginPath();let started=false;
+        fys.forEach((fy,gi)=>{
+          const v=s.values[gi];if(v==null)return;
+          const cx=pad.left+gi*groupW+groupW/2;
+          const cy=toY(v);
+          if(!started){ctx.moveTo(cx,cy);started=true;}else ctx.lineTo(cx,cy);
+        });
+        ctx.strokeStyle=s.color;ctx.lineWidth=2.5;ctx.stroke();
+        fys.forEach((fy,gi)=>{
+          const v=s.values[gi];if(v==null)return;
+          const cx=pad.left+gi*groupW+groupW/2;
+          const cy=toY(v);
+          ctx.beginPath();ctx.arc(cx,cy,5,0,Math.PI*2);
+          ctx.fillStyle=s.color;ctx.fill();
+          ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+          hitAreas.push({x:cx-8,y:cy-8,w:16,h:16,label:`FY${fy} ${s.label}`,value:v,color:s.color,fmt:info.fmt});
+        });
+      });
+    }
+  }
+
+  // X axis line
+  ctx.strokeStyle='#E2E8F4';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(pad.left,toY(0));ctx.lineTo(pad.left+cW,toY(0));ctx.stroke();
+}
+
+// ============================================================
+// TOOLTIP
+// ============================================================
+const tooltip=document.getElementById('tooltip');
+document.getElementById('mainChart').addEventListener('mousemove',function(e){
+  const rect=this.getBoundingClientRect();
+  const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  const hit=hitAreas.find(a=>mx>=a.x&&mx<=a.x+a.w&&my>=a.y&&my<=a.y+a.h);
+  if(hit){
+    tooltip.style.display='block';
+    tooltip.innerHTML=`<div class="tt-title">${hit.label}</div>
+      <div class="tt-row"><div class="tt-dot" style="background:${hit.color}"></div><span>${fmt(hit.value,hit.fmt)}</span></div>`;
+    let tx=e.clientX+14,ty=e.clientY-10;
+    if(tx+220>window.innerWidth)tx=e.clientX-230;
+    tooltip.style.left=tx+'px';tooltip.style.top=ty+'px';
+  } else {
+    tooltip.style.display='none';
+  }
+});
+document.getElementById('mainChart').addEventListener('mouseleave',()=>tooltip.style.display='none');
+
+// ============================================================
+// XLSX FILE HANDLER
+// ============================================================
+document.getElementById('fileInput').addEventListener('change',function(e){
+  const file=e.target.files[0];if(!file)return;this.value='';
+  const reader=new FileReader();
+  reader.onload=async function(ev){
+    try{
+      const grid=await XLSXLite.parse(ev.target.result);
+      if(!grid||grid.length<2)throw new Error('데이터 없음');
+
+      // Find header row
+      let hi=0;
+      for(let i=0;i<Math.min(5,grid.length);i++){
+        if(grid[i]&&grid[i].some(c=>c&&String(c).includes('날짜'))){hi=i;break;}
+      }
+      const headers=grid[hi].map(h=>h?String(h).trim().replace(/\s+/g,' '):'');
+
+      function findCol(test){return headers.findIndex(h=>test(h));}
+      const CI={
+        날짜:findCol(h=>h==='날짜'||h.includes('날짜')),
+        '전기사용량(kw)':findCol(h=>h.includes('전기사용량')),
+        '전기요금':findCol(h=>h==='전기요금'),
+        '일반용수사용량(㎥)':findCol(h=>h.includes('일반용수사용량')),
+        '일반수도요금':findCol(h=>h==='일반수도요금'),
+        '공업용수사용량(㎥)':findCol(h=>h.includes('공업용수사용량')),
+        '공업용수도요금':findCol(h=>h==='공업용수도요금'),
+        'LPG사용량(㎥)':findCol(h=>h.includes('LPG사용량')),
+        '가스요금':findCol(h=>h==='가스요금'),
+        '폐수처리시설사용료':findCol(h=>h.replace(/\s/g,'').includes('사용료')&&h.includes('폐')),
+        '폐기물발생량(ton)':findCol(h=>h.includes('폐기물발생량')),
+        '폐기물 금액':findCol(h=>h.includes('폐기물')&&h.includes('금액')),
+      };
+      // fallback 폐수 컬럼
+      if(CI['폐수처리시설사용료']<0)CI['폐수처리시설사용료']=findCol(h=>h.replace(/\s+/g,'').includes('공공폐수처리시설')&&h.includes('사용료'));
+
+      const parsed=[];
+      for(let r=hi+1;r<grid.length;r++){
+        const row=grid[r];if(!row)continue;
+        const rawD=row[CI['날짜']];if(rawD===null||rawD===undefined)continue;
+        let d;
+        if(typeof rawD==='number')d=new Date((rawD-25569)*86400000);
+        else d=new Date(String(rawD));
+        if(isNaN(d.getTime()))continue;
+        const yr=d.getUTCFullYear(),mo=d.getUTCMonth()+1;
+        const entry={date:d.toISOString().slice(0,10),fy:getFY(yr,mo),month:mo,fyMonth:getFYMonth(mo)};
+        Object.keys(METRIC_INFO).forEach(k=>{entry[k]=CI[k]>=0?toNum(row[CI[k]]):null;});
+        parsed.push(entry);
+      }
+      if(!parsed.length)throw new Error('유효한 행 없음');
+      raw=parsed.sort((a,b)=>a.fy-b.fy||a.fyMonth-b.fyMonth);
+
+      // Rebuild FY buttons
+      const fySet=[...new Set(raw.map(d=>d.fy))].sort();
+      document.getElementById('fyBtns').innerHTML=
+        `<button class="btn active" data-fy="all">전체</button>`+
+        fySet.map(f=>`<button class="btn" data-fy="${f}">FY${f}</button>`).join('');
+      currentFY='all';
+      render();
+      showStatus(`✅ ${file.name} (${parsed.length}건) 업데이트 완료`);
+    }catch(err){showStatus(`❌ 오류: ${err.message}`,true);}
+  };
+  reader.onerror=()=>showStatus('❌ 파일 읽기 실패',true);
+  reader.readAsArrayBuffer(file);
+});
+
+// ============================================================
+// RENDER
+// ============================================================
+function renderSummary(){
+  const info=METRIC_INFO[currentMetric];
+  const fys=[...new Set(raw.map(d=>d.fy))].sort().slice(-3);
+  document.getElementById('summaryCards').innerHTML=fys.map(fy=>{
+    const rows=raw.filter(d=>d.fy===fy&&toNum(d[currentMetric])!=null);
+    const total=rows.reduce((s,r)=>s+(toNum(r[currentMetric])||0),0);
+    return `<div class="summary-card">
+      <div class="card-label">FY${fy} 합계</div>
+      <div class="card-value">${fmtShort(total,info.fmt)}</div>
+      <div class="card-sub">${rows.length}개월 · 월평균 ${fmtShort(rows.length?Math.round(total/rows.length):0,info.fmt)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderChartMeta(){
+  const info=METRIC_INFO[currentMetric];
+  document.getElementById('chartTitle').textContent=`${info.label} — ${currentFY==='all'?'전체 회계연도 비교':`FY${currentFY} 월별 현황`}`;
+  document.getElementById('chartSub').textContent=`단위: ${info.unit} · 색상은 월별 구분 (FY 7월 → 6월 순서)`;
+}
+
+function renderLegend(){
+  document.getElementById('legend').innerHTML=FY_MONTH_LABELS.map((m,i)=>
+    `<div class="legend-item"><div class="legend-dot" style="background:${MONTH_COLORS[i]}"></div>${m}</div>`).join('');
+}
+
+function renderTable(){
+  const info=METRIC_INFO[currentMetric];
+  const fys=getActiveFYs();
+  let html=`<thead><tr><th>월 (FY 기준)</th>${fys.map(f=>`<th>FY${f}</th>`).join('')}</tr></thead><tbody>`;
+  const totals=fys.map(()=>0);
+  FY_MONTH_LABELS.forEach((ml,i)=>{
+    const cells=fys.map((fy,fi)=>{
+      const r=raw.find(d=>d.fy===fy&&d.fyMonth===i+1);
+      const v=r?toNum(r[currentMetric]):null;
+      if(v!=null)totals[fi]+=v;
+      return `<td${v==null?' class="empty"':''}>${v!=null?fmt(v,info.fmt):'-'}</td>`;
+    }).join('');
+    html+=`<tr><td><span class="month-dot" style="background:${MONTH_COLORS[i]}"></span>${ml}</td>${cells}</tr>`;
+  });
+  html+=`<tr class="total-row"><td>합 계</td>${totals.map(t=>`<td>${fmtShort(t,info.fmt)}</td>`).join('')}</tr></tbody>`;
+  document.getElementById('dataTable').innerHTML=html;
+  document.getElementById('tableTitle').textContent=`${info.label} 상세 데이터 (단위: ${info.unit})`;
+}
+
+function render(){
+  renderSummary();renderChartMeta();drawChart();renderLegend();renderTable();
+}
+
+// ============================================================
+// EVENTS
+// ============================================================
+document.getElementById('metricBtns').addEventListener('click',e=>{
+  const b=e.target.closest('[data-metric]');if(!b)return;
+  document.querySelectorAll('#metricBtns .btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');currentMetric=b.dataset.metric;render();
+});
+document.getElementById('fyBtns').addEventListener('click',e=>{
+  const b=e.target.closest('[data-fy]');if(!b)return;
+  document.querySelectorAll('#fyBtns .btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');currentFY=b.dataset.fy;render();
+});
+document.getElementById('chartTypeBtns').addEventListener('click',e=>{
+  const b=e.target.closest('[data-type]');if(!b)return;
+  document.querySelectorAll('#chartTypeBtns .btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');currentChartType=b.dataset.type;render();
+});
+window.addEventListener('resize',()=>drawChart());
+
+render();
+</script>
+</body>
+</html>
